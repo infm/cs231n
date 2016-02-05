@@ -373,7 +373,7 @@ class ConvNet(object):
     self.num_filters = num_filters
     self.filter_sizes = filter_sizes
     self.hidden_dims = hidden_dims
-    self.conv_pieces_num = len(num_filters) + 1
+    self.conv_pieces_num = len(num_filters)
     self.affine_pieces_num = len(hidden_dims)
     self.num_layers = self.conv_pieces_num + self.affine_pieces_num + 1
 
