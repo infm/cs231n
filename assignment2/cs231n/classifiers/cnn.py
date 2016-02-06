@@ -8,20 +8,20 @@ from cs231n.layer_utils import *
 class ThreeLayerConvNet(object):
   """
   A three-layer convolutional network with the following architecture:
-  
+
   conv - relu - 2x2 max pool - affine - relu - affine - softmax
-  
+
   The network operates on minibatches of data that have shape (N, C, H, W)
   consisting of N images, each with height H and width W and with C input
   channels.
   """
-  
+
   def __init__(self, input_dim=(3, 32, 32), num_filters=32, filter_size=7,
                hidden_dim=100, num_classes=10, weight_scale=1e-3, reg=0.0,
                dtype=np.float32):
     """
     Initialize a new network.
-    
+
     Inputs:
     - input_dim: Tuple (C, H, W) giving size of input data
     - num_filters: Number of filters to use in the convolutional layer
@@ -36,7 +36,7 @@ class ThreeLayerConvNet(object):
     self.params = {}
     self.reg = reg
     self.dtype = dtype
-    
+
     ############################################################################
     # TODO: Initialize weights and biases for the three-layer convolutional    #
     # network. Weights should be initialized from a Gaussian with standard     #
@@ -63,18 +63,18 @@ class ThreeLayerConvNet(object):
 
     for k, v in self.params.iteritems():
       self.params[k] = v.astype(dtype)
-     
- 
+
+
   def loss(self, X, y=None):
     """
     Evaluate loss and gradient for the three-layer convolutional network.
-    
+
     Input / output: Same API as TwoLayerNet in fc_net.py.
     """
     W1, b1 = self.params['W1'], self.params['b1']
     W2, b2 = self.params['W2'], self.params['b2']
     W3, b3 = self.params['W3'], self.params['b3']
-    
+
     # pass conv_param to the forward pass for the convolutional layer
     filter_size = W1.shape[2]
     conv_param = {'stride': 1, 'pad': (filter_size - 1) / 2}
@@ -88,7 +88,7 @@ class ThreeLayerConvNet(object):
     # computing the class scores for X and storing them in the scores          #
     # variable.                                                                #
     ############################################################################
-    
+
     c1, c1_cache = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
     a2, a2_cache = affine_relu_forward(c1, W2, b2)
     scores, scores_cache = affine_forward(a2, W3, b3)
@@ -96,10 +96,10 @@ class ThreeLayerConvNet(object):
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
-    
+
     if y is None:
       return scores
-    
+
     loss, grads = 0, {}
     ############################################################################
     # TODO: Implement the backward pass for the three-layer convolutional net, #
@@ -122,9 +122,9 @@ class ThreeLayerConvNet(object):
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
-    
+
     return loss, grads
-  
+
 # [conv-relu-pool]xN - conv - relu - [affine]xM - [softmax or SVM]
 class GeneralConvNet(object):
   def __init__(self, input_dim=(3, 32, 32), conv_pieces_num=3,
@@ -133,7 +133,7 @@ class GeneralConvNet(object):
       dtype=np.float32):
     """
     Initialize a new network.
-    
+
     Inputs:
     - input_dim: Tuple (C, H, W) giving size of input data
     - num_filters: Number of filters to use in the convolutional layer
@@ -213,7 +213,7 @@ class GeneralConvNet(object):
   def loss(self, X, y=None):
     """
     Evaluate loss and gradient for the three-layer convolutional network.
-    
+
     Input / output: Same API as TwoLayerNet in fc_net.py.
     """
     # pass pool_param to the forward pass for the max-pooling layer
@@ -224,7 +224,7 @@ class GeneralConvNet(object):
     caches = []
     for i in xrange(self.conv_pieces_num):
       stri = str(i + 1)
-      # print "Forward conv-relu-pool #%02d" % (i + 1) 
+      # print "Forward conv-relu-pool #%02d" % (i + 1)
       # print self.params['W' + stri].shape
       conv_param = {'stride': 1, 'pad': (self.filter_sizes[i] - 1) / 2}
       inp, cache = conv_bn_relu_pool_forward(inp,
@@ -237,7 +237,7 @@ class GeneralConvNet(object):
       # print inp.shape
       caches.append(cache)
 
-    # print "Forward conv-relu #%02d" % (self.conv_pieces_num + 1) 
+    # print "Forward conv-relu #%02d" % (self.conv_pieces_num + 1)
     strc = str(self.conv_pieces_num + 1)
     # print self.params['W' + strc].shape
     inp, cache = conv_bn_relu_forward(inp,
@@ -252,7 +252,7 @@ class GeneralConvNet(object):
 
     for i in xrange(self.affine_pieces_num):
       stri = str(self.conv_pieces_num + i + 2)
-      # print "Forward affine-relu #%02d" % (self.conv_pieces_num + i + 2) 
+      # print "Forward affine-relu #%02d" % (self.conv_pieces_num + i + 2)
       # print self.params['W' + stri].shape
       inp, cache = affine_bn_relu_forward(inp,
           self.params['W' + stri],
@@ -270,19 +270,10 @@ class GeneralConvNet(object):
 
     if y is None:
       return scores
-    
+
     loss, grads = 0, {}
 
     loss, dscores = softmax_loss(scores, y)
-    # loss += 0.5 * self.reg * (np.sum(W1 * W1) + np.sum(W2 * W2) +
-    #     np.sum(W3 * W3))
-
-    # da1, grads['W3'], grads['b3'] = affine_backward(dscores, scores_cache)
-    # grads['W3'] += self.reg * W3
-    # dc1, grads['W2'], grads['b2'] = affine_relu_backward(da1, a2_cache)
-    # grads['W2'] += self.reg * W2
-    # _, grads['W1'], grads['b1'] = conv_relu_pool_backward(dc1, c1_cache)
-    # grads['W1'] += self.reg * W1
 
     dres = dscores
     # Compute grads for out layer separately
@@ -306,8 +297,8 @@ class GeneralConvNet(object):
       dres = dx
 
     # Backward for single conv-relu separately
-    strc = str(self.conv_pieces_num + 1) 
-    # print "Backward conv-relu #%02d" % (self.conv_pieces_num + 1) 
+    strc = str(self.conv_pieces_num + 1)
+    # print "Backward conv-relu #%02d" % (self.conv_pieces_num + 1)
     dx, dw, db, dgamma, dbeta = conv_bn_relu_backward(dres,
         caches[self.conv_pieces_num])
     grads['W' + strc] = dw
@@ -324,7 +315,7 @@ class GeneralConvNet(object):
 
     for i in xrange(self.conv_pieces_num - 1, -1, -1):
       stri = str(i + 1)
-      # print "Backward conv-relu-pool #%02d" % (i + 1) 
+      # print "Backward conv-relu-pool #%02d" % (i + 1)
       cache = caches[i]
       dx, dw, db, dgamma, dbeta = conv_bn_relu_pool_backward(dres, cache)
       grads['W' + stri] = dw
@@ -341,16 +332,17 @@ class GeneralConvNet(object):
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
-    
+
     return loss, grads
 
 class ConvNet(object):
   def __init__(self, input_dim=(3, 32, 32), pieces_patterns=None,
-      num_filters=None, filter_sizes=None, hidden_dims=None, num_classes=10,
-      weight_scale=1e-3, reg=0.0, dtype=np.float32):
+      num_filters=None, filter_sizes=None, strides=None, pads=None,
+      hidden_dims=None, num_classes=10, weight_scale=1e-3, reg=0.0,
+      dtype=np.float32):
     """
     Initialize a new network.
-    
+
     Inputs:
     - input_dim: Tuple (C, H, W) giving size of input data
     - pieces_patterns: List of strings, describing each piece of architecture
@@ -377,6 +369,13 @@ class ConvNet(object):
     self.affine_pieces_num = len(hidden_dims)
     self.num_layers = self.conv_pieces_num + self.affine_pieces_num + 1
 
+    if strides == None:
+      strides = [1 for i in xrange(self.conv_pieces_num)]
+    self.strides = strides
+    if pads == None:
+      pads = [(w - 1) / 2 for w in filter_sizes]
+    self.pads = pads
+
     self.weight_scale = weight_scale
     self.reg = reg
     self.dtype = dtype
@@ -386,33 +385,56 @@ class ConvNet(object):
     C, H, W = input_dim
     conv_i = 0
     affine_i = 0
+    pool_pieces_num = 0
     for i in xrange(len(pieces_patterns)):
       stri = str(i + 1)
       pattern = pieces_patterns[i]
       # All layers suppose to have batch normalization
       # conv-relu or conv-relu-pool
-      if 'cr' == pattern or 'crp' == pattern: 
+      if 'cr' == pattern or 'crp' == pattern:
         self.__init_conv_piece(stri, num_filters[conv_i], C,
             filter_sizes[conv_i])
         C = num_filters[conv_i]
         conv_i += 1
+        if 'crp' == pattern:
+          pool_pieces_num += 1
       # affine-relu
       elif 'ar' == pattern:
         # Checks if we come from conv-like layer
         prev_dim = None
         if affine_i == 0:
           # Since we're using padding to not to reduce input data dimensions
-          prev_dim = num_filters[-1] * H * W * 0.25**self.conv_pieces_num
+          prev_dim = num_filters[-1] * H * W * 0.25**pool_pieces_num
         else:
           prev_dim = hidden_dims[affine_i - 1]
         self.__init_affine_piece(stri, prev_dim, hidden_dims[affine_i])
         affine_i += 1
       else:
-        raise ValueError('Incorrect piece pattern: %s.' % pattern) 
+        raise ValueError('Incorrect piece pattern: %s.' % pattern)
     self.__init_final_layer(hidden_dims[-1], num_classes)
 
     for k, v in self.params.iteritems():
       self.params[k] = v.astype(dtype)
+
+
+  def loss(self, X, y=None):
+    scores, caches = self.__forward_all(X)
+
+    if y is None:
+      return scores
+
+    loss, dscores = softmax_loss(scores, y)
+    grads = {}
+
+    reg_loss = self.__backward_all(dscores, caches, grads)
+    loss += reg_loss
+
+    ############################################################################
+    #                             END OF YOUR CODE                             #
+    ############################################################################
+
+    return loss, grads
+
 
   def __init_conv_piece(self, stri, F, C, HH):
     WW = HH
@@ -422,6 +444,7 @@ class ConvNet(object):
     self.params['spatial_gamma' + stri] = np.ones(F)
     self.params['spatial_beta' + stri] = np.zeros(F)
 
+
   def __init_affine_piece(self, stri, prev_dim, current_dim):
     self.params['W' + stri] = self.weight_scale * np.random.randn(prev_dim,
         current_dim)
@@ -430,135 +453,141 @@ class ConvNet(object):
     self.params['gamma' + stri] = np.ones(current_dim)
     self.params['beta' + stri] = np.zeros(current_dim)
 
+
   def __init_final_layer(self, prev_dim, num_classes):
     stri = str(self.conv_pieces_num + self.affine_pieces_num + 1)
     self.params['W' + stri] = self.weight_scale * np.random.randn(prev_dim,
         num_classes)
     self.params['b' + stri] = np.zeros(num_classes)
 
-  def loss(self, X, y=None):
-    """
-    Evaluate loss and gradient for the three-layer convolutional network.
-    
-    Input / output: Same API as TwoLayerNet in fc_net.py.
-    """
+
+  def __forward_cr(self, stri, inp, bn_param, conv_param):
+    return conv_bn_relu_forward(inp,
+        self.params['W' + stri],
+        self.params['b' + stri],
+        conv_param,
+        self.params['spatial_gamma' + stri],
+        self.params['spatial_beta' + stri],
+        bn_param)
+
+
+  def __forward_crp(self, stri, inp, bn_param, conv_param, pool_param):
+    return conv_bn_relu_pool_forward(inp,
+        self.params['W' + stri],
+        self.params['b' + stri],
+        conv_param, pool_param,
+        self.params['spatial_gamma' + stri],
+        self.params['spatial_beta' + stri],
+        bn_param)
+
+
+  def __forward_ar(self, stri, inp, bn_param):
+    return affine_bn_relu_forward(inp,
+        self.params['W' + stri],
+        self.params['b' + stri],
+        self.params['gamma' + stri],
+        self.params['beta' + stri],
+        bn_param)
+
+
+  def __forward_final(self, inp):
+    strn = str(self.num_layers)
+    return affine_forward(inp,
+        self.params['W' + strn],
+        self.params['b' + strn])
+
+
+  def __forward_all(self, X):
     # pass pool_param to the forward pass for the max-pooling layer
     pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
 
     scores = None
     inp = X
     caches = []
-    for i in xrange(self.conv_pieces_num):
+
+    conv_i = 0
+    for i in xrange(self.num_layers - 1):
       stri = str(i + 1)
-      # print "Forward conv-relu-pool #%02d" % (i + 1) 
-      # print self.params['W' + stri].shape
-      conv_param = {'stride': 1, 'pad': (self.filter_sizes[i] - 1) / 2}
-      inp, cache = conv_bn_relu_pool_forward(inp,
-          self.params['W' + stri],
-          self.params['b' + stri],
-          conv_param, pool_param,
-          self.params['spatial_gamma' + stri],
-          self.params['spatial_beta' + stri],
-          self.bn_params[i])
-      # print inp.shape
+      pattern = self.pieces_patterns[i]
+      bn_param = self.bn_params[i]
+      if 'cr' == pattern:
+        conv_param = {'stride': self.strides[conv_i], 'pad': self.pads[conv_i]}
+        inp, cache = self.__forward_cr(stri, inp, bn_param, conv_param)
+        conv_i += 1
+      elif 'crp' == pattern:
+        conv_param = {'stride': self.strides[conv_i], 'pad': self.pads[conv_i]}
+        inp, cache = self.__forward_crp(stri, inp, bn_param, conv_param,
+            pool_param)
+        conv_i += 1
+      elif 'ar' == pattern:
+        inp, cache = self.__forward_ar(stri, inp, bn_param)
+      else:
+        raise ValueError('Incorrect piece pattern: %s.' % pattern)
       caches.append(cache)
-
-    # print "Forward conv-relu #%02d" % (self.conv_pieces_num + 1) 
-    strc = str(self.conv_pieces_num + 1)
-    # print self.params['W' + strc].shape
-    inp, cache = conv_bn_relu_forward(inp,
-          self.params['W' + strc],
-          self.params['b' + strc],
-          conv_param,
-          self.params['spatial_gamma' + strc],
-          self.params['spatial_beta' + strc],
-          self.bn_params[self.conv_pieces_num])
-    # print inp.shape
+    # Final layer pass
+    scores, cache = self.__forward_final(inp)
     caches.append(cache)
+    return scores, caches
 
-    for i in xrange(self.affine_pieces_num):
-      stri = str(self.conv_pieces_num + i + 2)
-      # print "Forward affine-relu #%02d" % (self.conv_pieces_num + i + 2) 
-      # print self.params['W' + stri].shape
-      inp, cache = affine_bn_relu_forward(inp,
-          self.params['W' + stri],
-          self.params['b' + stri],
-          self.params['gamma' + stri],
-          self.params['beta' + stri],
-          self.bn_params[self.conv_pieces_num + i + 1])
-      # print inp.shape
-      caches.append(cache)
-    strn = str(self.conv_pieces_num + self.affine_pieces_num + 2)
-    scores, cache = affine_forward(inp,
-          self.params['W' + strn],
-          self.params['b' + strn])
-    caches.append(cache)
 
-    if y is None:
-      return scores
-    
-    loss, grads = 0, {}
+  def __backward_cr(self, stri, dres, cache, grads):
+    # Backward for single conv-relu separately
+    dx, dw, db, dgamma, dbeta = conv_bn_relu_backward(dres, cache)
+    grads['W' + stri] = dw
+    # Regularize
+    grads['W' + stri] += self.reg * self.params['W' + stri]
 
-    loss, dscores = softmax_loss(scores, y)
-    dres = dscores
+    grads['b' + stri] = db
+    grads['spatial_gamma' + stri] = dgamma
+    grads['spatial_beta' + stri] = dbeta
+    return dx
+
+
+  def __backward_crp(self, stri, dres, cache, grads):
+    # Backward for single conv-relu separately
+    dx, dw, db, dgamma, dbeta = conv_bn_relu_pool_backward(dres, cache)
+    grads['W' + stri] = dw
+    # Regularize
+    grads['W' + stri] += self.reg * self.params['W' + stri]
+
+    grads['b' + stri] = db
+    grads['spatial_gamma' + stri] = dgamma
+    grads['spatial_beta' + stri] = dbeta
+    return dx
+
+
+  def __backward_ar(self, stri, dres, cache, grads):
+    dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(dres, cache)
+    grads['W' + stri] = dw
+    # Regularize
+    grads['W' + stri] += self.reg * self.params['W' + stri]
+
+    grads['b' + stri] = db
+    grads['gamma' + stri] = dgamma
+    grads['beta' + stri] = dbeta
+    return dx
+
+
+  def __backward_all(self, dscores, caches, grads):
+    reg_loss = 0
     # Compute grads for out layer separately
+    strn = str(self.num_layers)
     dres, grads['W' + strn], grads['b' + strn] = affine_backward(
             dscores, caches[self.num_layers - 1])
-    for i in xrange(self.affine_pieces_num - 1, -1, -1):
-      stri = str(self.conv_pieces_num + i + 2)
-      # print "Backward affine-relu #%02d" % (self.conv_pieces_num + i + 2)
-      cache = caches[self.conv_pieces_num + i + 1]
-      dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(dres, cache)
-      grads['W' + stri] = dw
-      # Regularize
-      Wi = self.params['W' + stri]
-      loss += .5 * self.reg * np.sum(Wi * Wi)
-      grads['W' + stri] += self.reg * Wi
-
-      grads['b' + stri] = db
-      grads['gamma' + stri] = dgamma
-      grads['beta' + stri] = dbeta
-      # Setting base derivative for next iteration
-      dres = dx
-
-    # Backward for single conv-relu separately
-    strc = str(self.conv_pieces_num + 1) 
-    # print "Backward conv-relu #%02d" % (self.conv_pieces_num + 1) 
-    dx, dw, db, dgamma, dbeta = conv_bn_relu_backward(dres,
-        caches[self.conv_pieces_num])
-    grads['W' + strc] = dw
-    # Regularize
-    Wi = self.params['W' + strc]
-    loss += .5 * self.reg * np.sum(Wi * Wi)
-    grads['W' + strc] += self.reg * Wi
-
-    grads['b' + strc] = db
-    grads['spatial_gamma' + strc] = dgamma
-    grads['spatial_beta' + strc] = dbeta
-    # Setting base derivative for next iteration
-    dres = dx
-
-    for i in xrange(self.conv_pieces_num - 1, -1, -1):
+    for i in xrange(self.num_layers - 2, -1, -1):
       stri = str(i + 1)
-      # print "Backward conv-relu-pool #%02d" % (i + 1) 
       cache = caches[i]
-      dx, dw, db, dgamma, dbeta = conv_bn_relu_pool_backward(dres, cache)
-      grads['W' + stri] = dw
-      # Regularize
-      Wi = self.params['W' + stri]
-      loss += .5 * self.reg * np.sum(Wi * Wi)
-      grads['W' + stri] += self.reg * Wi
-
-      grads['b' + stri] = db
-      grads['spatial_gamma' + stri] = dgamma
-      grads['spatial_beta' + stri] = dbeta
-      # Setting base derivative for next iteration
-      dres = dx
-    ############################################################################
-    #                             END OF YOUR CODE                             #
-    ############################################################################
-    
-    return loss, grads
+      pattern = self.pieces_patterns[i]
+      if 'cr' == pattern:
+        dres = self.__backward_cr(stri, dres, cache, grads)
+      elif 'crp' == pattern:
+        dres = self.__backward_crp(stri, dres, cache, grads)
+      elif 'ar' == pattern:
+        dres = self.__backward_ar(stri, dres, cache, grads)
+      else:
+        raise ValueError('Incorrect piece pattern: %s.' % pattern)
+      reg_loss += .5 * self.reg * np.sum(np.square(self.params['W' + stri]))
+    return reg_loss
 
 
 pass
